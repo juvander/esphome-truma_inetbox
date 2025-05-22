@@ -1,4 +1,3 @@
-from esphome import automation
 from esphome.components import climate
 import esphome.config_validation as cv
 import esphome.codegen as cg
@@ -7,6 +6,10 @@ from esphome.const import (
     CONF_TYPE,
     CONF_NAME,
     CONF_VISUAL,
+    CONF_TARGET_TEMPERATURE,
+    CONF_MIN_TEMPERATURE,
+    CONF_MAX_TEMPERATURE,
+    CONF_TEMPERATURE_STEP,
 )
 from esphome.components.climate import (
     ClimateMode,
@@ -18,9 +21,11 @@ CLIMATE_MODES = {
     "AUTO": ClimateMode.CLIMATE_MODE_AUTO,
 }
 CLIMATE_VISUAL_SCHEMA = cv.Schema({
-        cv.Optional("min_temperature", default=5.0): cv.float_,
-        cv.Optional("max_temperature", default=30.0): cv.float_,
-        cv.Optional("temperature_step", default=0.5): cv.float_,
+    cv.Optional(CONF_TARGET_TEMPERATURE, default={}): cv.Schema({
+        cv.Optional(CONF_MIN_TEMPERATURE, default=5.0): cv.float_,
+        cv.Optional(CONF_MAX_TEMPERATURE, default=30.0): cv.float_,
+        cv.Optional(CONF_TEMPERATURE_STEP, default=0.5): cv.float_,
+    })
 })
 from .. import truma_inetbox_ns, CONF_TRUMA_INETBOX_ID, TrumaINetBoxApp
 
@@ -58,7 +63,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional("disabled_by_default", default=False): cv.boolean,
     cv.Optional("entity_category"): cv.entity_category,
     cv.Optional("icon"): cv.icon,
-    #cv.Optional(CONF_VISUAL, default={}): CLIMATE_VISUAL_SCHEMA,
+    cv.Optional(CONF_VISUAL, default={}): CLIMATE_VISUAL_SCHEMA,
 })
 
 FINAL_VALIDATE_SCHEMA = set_default_based_on_type()
