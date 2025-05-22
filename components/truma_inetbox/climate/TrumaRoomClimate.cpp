@@ -132,6 +132,7 @@ climate::ClimateTraits TrumaRoomClimate::traits() {
   auto traits = climate::ClimateTraits();
   traits.set_supports_current_temperature(true);
   traits.set_supported_modes({climate::ClimateMode::CLIMATE_MODE_OFF, climate::ClimateMode::CLIMATE_MODE_HEAT});
+  
   traits.set_supported_fan_modes({{
       climate::CLIMATE_FAN_OFF,
       climate::CLIMATE_FAN_LOW,
