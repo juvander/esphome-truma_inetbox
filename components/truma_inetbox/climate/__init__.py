@@ -1,3 +1,4 @@
+from esphome import automation
 from esphome.components import climate
 import esphome.config_validation as cv
 import esphome.codegen as cg
@@ -17,11 +18,9 @@ CLIMATE_MODES = {
     "AUTO": ClimateMode.CLIMATE_MODE_AUTO,
 }
 CLIMATE_VISUAL_SCHEMA = cv.Schema({
-    cv.Optional("target_temperature", default={}): cv.Schema({
         cv.Optional("min_temperature", default=5.0): cv.float_,
         cv.Optional("max_temperature", default=30.0): cv.float_,
         cv.Optional("temperature_step", default=0.5): cv.float_,
-    })
 })
 from .. import truma_inetbox_ns, CONF_TRUMA_INETBOX_ID, TrumaINetBoxApp
 
