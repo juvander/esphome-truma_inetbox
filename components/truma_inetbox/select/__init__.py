@@ -77,7 +77,7 @@ CONFIG_SCHEMA = select.select_schema(
         cv.Optional(CONF_ENTITY_CATEGORY): cv.entity_category,
         cv.Optional(CONF_DISABLED_BY_DEFAULT, default=False): cv.boolean,
     }
-).extend(cv.COMPONENT_SCHEMA).add_on_set(set_default_based_on_type())
+).extend(cv.COMPONENT_SCHEMA)
 FINAL_VALIDATE_SCHEMA = set_default_based_on_type()
 
 
