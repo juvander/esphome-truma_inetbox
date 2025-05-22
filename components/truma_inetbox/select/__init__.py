@@ -7,6 +7,8 @@ from esphome.const import (
     CONF_ICON,
     CONF_OPTIONS,
     ICON_THERMOMETER,
+    CONF_ENTITY_CATEGORY,
+    CONF_DISABLED_BY_DEFAULT,
 )
 from .. import truma_inetbox_ns, CONF_TRUMA_INETBOX_ID, TrumaINetBoxApp
 
