@@ -12,6 +12,8 @@ namespace esphome {
     void loop() override {}
     void dump_config() override;
     void control(const climate::ClimateCall &call) override;
+    void setup() override;
+    climate::ClimateTraits traits() override;
   
   
     void set_visual_min_temperature(float value) { this->visual_min_temperature_ = value; }
@@ -19,7 +21,7 @@ namespace esphome {
     void set_visual_temperature_step(float value) { this->visual_temperature_step_ = value; }
   
    protected:
-    std::set<ClimateMode> supported_modes_;
+    std::set<esphome::climate::ClimateMode> supported_modes_;
     float visual_min_temperature_{5.0};
     float visual_max_temperature_{30.0};
     float visual_temperature_step_{0.5};
