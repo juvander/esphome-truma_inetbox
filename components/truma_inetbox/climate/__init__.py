@@ -9,11 +9,6 @@ from esphome.const import (
 from esphome.components.climate import (
     ClimateMode,
 )
-#from esphome.components.climate.consts import (
-#    CLIMATE_MODE_OFF,
-#    CLIMATE_MODE_HEAT,
-#    CLIMATE_MODE_AUTO,
-#)
 
 CLIMATE_MODES = {
     "OFF": ClimateMode.CLIMATE_MODE_OFF,
@@ -59,7 +54,11 @@ CONFIG_SCHEMA = cv.Schema({
 
     cv.Optional("preset"): cv.All(cv.ensure_list(cv.string)),  # If you want presets
     cv.Optional("supported_modes", default=["OFF", "HEAT"]): cv.ensure_list(cv.enum(CLIMATE_MODES, upper=True)),
-}).extend(cv.COMPONENT_SCHEMA)
+}).extend(cv.COMPONENT_SCHEMA).extend({
+    cv.Optional("disabled_by_default", default=False): cv.boolean,
+    cv.Optional("entity_category"): cv.entity_category,
+    cv.Optional("icon"): cv.icon,
+})
 
 FINAL_VALIDATE_SCHEMA = set_default_based_on_type()
 
