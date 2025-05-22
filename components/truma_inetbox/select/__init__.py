@@ -53,15 +53,17 @@ CONF_SUPPORTED_TYPE = {
 
 def set_default_based_on_type():
     def set_defaults_(config):
-        # Normalize type key to uppercase to match CONF_SUPPORTED_TYPE
-        ttype = config[CONF_TYPE].upper()
+        type_key = config[CONF_TYPE].upper()  # normalize for lookup
+        type_data = CONF_SUPPORTED_TYPE[type_key]
 
-        config[CONF_ID].type = CONF_SUPPORTED_TYPE[ttype][CONF_CLASS]
+        config[CONF_ID].type = type_data[CONF_CLASS]
 
         if CONF_ICON not in config:
-            config[CONF_ICON] = CONF_SUPPORTED_TYPE[ttype][CONF_ICON]
+            config[CONF_ICON] = type_data[CONF_ICON]
+
         if CONF_OPTIONS not in config:
-            config[CONF_OPTIONS] = CONF_SUPPORTED_TYPE[ttype][CONF_OPTIONS]
+            config[CONF_OPTIONS] = type_data[CONF_OPTIONS]
+
         return config
     return set_defaults_
 
@@ -80,6 +82,7 @@ CONFIG_SCHEMA = select.select_schema(
         cv.Optional(CONF_DISABLED_BY_DEFAULT, default=False): cv.boolean,
     }
 ).extend(cv.COMPONENT_SCHEMA)
+
 FINAL_VALIDATE_SCHEMA = set_default_based_on_type()
 
 
@@ -93,4 +96,5 @@ async def to_code(config):
     )
     await cg.register_parented(var, config[CONF_TRUMA_INETBOX_ID])
 
-    cg.add(var.set_type(CONF_SUPPORTED_TYPE[config[CONF_TYPE]][CONF_TYPE]))
+    type_key = config[CONF_TYPE].upper()
+    cg.add(var.set_type(CONF_SUPPORTED_TYPE[type_key][CONF_TYPE]))
