@@ -17,8 +17,8 @@ CLIMATE_MODES = {
     "AUTO": ClimateMode.CLIMATE_MODE_AUTO,
 }
 CLIMATE_VISUAL_SCHEMA = cv.Schema({
-    cv.Optional("min_temperature", default=7): cv.float_,
-    cv.Optional("max_temperature", default=35): cv.float_,
+    cv.Optional("min_temperature", default=5.0): cv.float_,
+    cv.Optional("max_temperature", default=30.0): cv.float_,
     cv.Optional("temperature_step", default=0.5): cv.float_,
 })
 from .. import truma_inetbox_ns, CONF_TRUMA_INETBOX_ID, TrumaINetBoxApp
@@ -50,13 +50,6 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_TYPE): cv.enum(CONF_SUPPORTED_TYPE, upper=True),
 
     cv.Optional(CONF_NAME, default="Truma Climate"): cv.string,
-
-    # Explicit climate configuration fields
-    #cv.Optional("visual"): cv.Schema({
-    #    cv.Optional("min_temperature", default=5.0): cv.float_,
-    #    cv.Optional("max_temperature", default=30.0): cv.float_,
-    #    cv.Optional("temperature_step", default=0.5): cv.float_,
-    #}),
 
     cv.Optional("preset"): cv.All(cv.ensure_list(cv.string)),  # If you want presets
     cv.Optional("supported_modes", default=["OFF", "HEAT"]): cv.ensure_list(cv.enum(CLIMATE_MODES, upper=True)),
