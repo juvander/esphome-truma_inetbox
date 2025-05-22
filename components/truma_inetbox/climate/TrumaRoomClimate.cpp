@@ -139,6 +139,11 @@ climate::ClimateTraits TrumaRoomClimate::traits() {
       climate::CLIMATE_FAN_MEDIUM,
       climate::CLIMATE_FAN_HIGH,
   }});
+  
+  void TrumaRoomClimate::set_supported_modes(const std::set<climate::ClimateMode> &modes) {
+    this->supported_modes_ = modes;
+  }
+  
   // traits.set_supported_presets({{
   //     climate::CLIMATE_PRESET_NONE,
   //     climate::CLIMATE_PRESET_ECO,
