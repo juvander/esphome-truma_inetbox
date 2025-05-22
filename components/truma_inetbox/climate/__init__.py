@@ -8,7 +8,6 @@ from esphome.const import (
 )
 from esphome.components.climate import (
     ClimateMode,
-    ClimateAction,
 )
 #from esphome.components.climate.consts import (
 #    CLIMATE_MODE_OFF,
