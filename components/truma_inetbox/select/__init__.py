@@ -69,7 +69,7 @@ CONFIG_SCHEMA = select.select_schema(
     {
         cv.GenerateID(): cv.declare_id(TrumaSelect),
         cv.GenerateID(CONF_TRUMA_INETBOX_ID): cv.use_id(TrumaINetBoxApp),
-        cv.Required(CONF_TYPE): cv.enum(CONF_SUPPORTED_TYPE, upper=True),
+        cv.Required(CONF_TYPE): cv.one_of(*CONF_SUPPORTED_TYPE.keys(), upper=True),
         cv.Optional(CONF_ICON): cv.icon,
         cv.Optional(CONF_OPTIONS): cv.All(
             cv.ensure_list(cv.string_strict), cv.Length(min=1)
