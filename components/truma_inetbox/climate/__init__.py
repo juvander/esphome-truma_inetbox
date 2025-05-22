@@ -1,5 +1,5 @@
 from esphome.components import climate
-from esphome.components.climate import visual as climate_visual
+from esphome.components.climate.visual import CLIMATE_VISUAL_SCHEMA
 import esphome.config_validation as cv
 import esphome.codegen as cg
 from esphome.const import (
@@ -60,7 +60,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional("disabled_by_default", default=False): cv.boolean,
     cv.Optional("entity_category"): cv.entity_category,
     cv.Optional("icon"): cv.icon,
-    cv.Optional(CONF_VISUAL, default={}): climate_visual.CLIMATE_VISUAL_SCHEMA,
+    cv.Optional(CONF_VISUAL, default={}): CLIMATE_VISUAL_SCHEMA,
 })
 
 FINAL_VALIDATE_SCHEMA = set_default_based_on_type()
