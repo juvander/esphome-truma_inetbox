@@ -53,13 +53,14 @@ CONF_SUPPORTED_TYPE = {
 
 def set_default_based_on_type():
     def set_defaults_(config):
+        lookup = config[CONF_TYPE]        
         # update the class
-        config[CONF_ID].type = CONF_SUPPORTED_TYPE[config[CONF_TYPE]][CONF_CLASS]
+        config[CONF_ID].type = CONF_SUPPORTED_TYPE[lookup][CONF_CLASS]
         # set defaults based on sensor type:
         if CONF_ICON not in config:
-            config[CONF_ICON] = CONF_SUPPORTED_TYPE[config[CONF_TYPE]][CONF_ICON]
+            config[CONF_ICON] = CONF_SUPPORTED_TYPE[lookup][CONF_ICON]
         if CONF_OPTIONS not in config:
-            config[CONF_OPTIONS] = CONF_SUPPORTED_TYPE[config[CONF_TYPE]][CONF_OPTIONS]
+            config[CONF_OPTIONS] = CONF_SUPPORTED_TYPE[lookup][CONF_OPTIONS]
         return config
 
     return set_defaults_
@@ -69,7 +70,7 @@ CONFIG_SCHEMA = select.select_schema(
     {
         cv.GenerateID(): cv.declare_id(TrumaSelect),
         cv.GenerateID(CONF_TRUMA_INETBOX_ID): cv.use_id(TrumaINetBoxApp),
-        cv.Required(CONF_TYPE): cv.one_of(*CONF_SUPPORTED_TYPE.keys(), upper=True),
+        cv.Required(CONF_TYPE): cv.one_of(*CONF_SUPPORTED_TYPE.keys()),
         cv.Optional(CONF_ICON): cv.icon,
         cv.Optional(CONF_OPTIONS): cv.All(
             cv.ensure_list(cv.string_strict), cv.Length(min=1)
