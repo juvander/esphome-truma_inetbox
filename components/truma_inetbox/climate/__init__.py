@@ -76,11 +76,11 @@ async def to_code(config):
     await cg.register_parented(var, config[CONF_TRUMA_INETBOX_ID])
 
     # Optional visual settings
-    if "visual" in config:
-        visual = config["visual"]
-        cg.add(var.set_visual_min_temperature(visual["min_temperature"]))
-        cg.add(var.set_visual_max_temperature(visual["max_temperature"]))
-        cg.add(var.set_visual_temperature_step(visual["temperature_step"]))
+    #if "visual" in config:
+    #    visual = config["visual"]
+    #    cg.add(var.set_visual_min_temperature(visual["min_temperature"]))
+    #    cg.add(var.set_visual_max_temperature(visual["max_temperature"]))
+    #    cg.add(var.set_visual_temperature_step(visual["temperature_step"]))
 
     # Optional supported modes
     if "supported_modes" in config:
