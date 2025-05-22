@@ -5,6 +5,7 @@ from esphome.const import (
     CONF_ID,
     CONF_TYPE,
     CONF_NAME,
+    CONF_VISUAL,
 )
 from esphome.components.climate import (
     ClimateMode,
@@ -58,6 +59,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional("disabled_by_default", default=False): cv.boolean,
     cv.Optional("entity_category"): cv.entity_category,
     cv.Optional("icon"): cv.icon,
+    cv.Optional(CONF_VISUAL): climate.CLIMATE_VISUAL_SCHEMA,
 })
 
 FINAL_VALIDATE_SCHEMA = set_default_based_on_type()
