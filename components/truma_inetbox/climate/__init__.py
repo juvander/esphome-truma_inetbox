@@ -6,16 +6,20 @@ from esphome.const import (
     CONF_TYPE,
     CONF_NAME,
 )
-from esphome.components.climate.consts import (
-    CLIMATE_MODE_OFF,
-    CLIMATE_MODE_HEAT,
-    CLIMATE_MODE_AUTO,
+from esphome.components.climate import (
+    ClimateMode,
+    ClimateAction,
 )
+#from esphome.components.climate.consts import (
+#    CLIMATE_MODE_OFF,
+#    CLIMATE_MODE_HEAT,
+#    CLIMATE_MODE_AUTO,
+#)
 
 CLIMATE_MODES = {
-    "OFF": CLIMATE_MODE_OFF,
-    "HEAT": CLIMATE_MODE_HEAT,
-    "AUTO": CLIMATE_MODE_AUTO,
+    "OFF": ClimateMode.CLIMATE_MODE_OFF,
+    "HEAT": ClimateMode.CLIMATE_MODE_HEAT,
+    "AUTO": ClimateMode.CLIMATE_MODE_AUTO,
 }
 from .. import truma_inetbox_ns, CONF_TRUMA_INETBOX_ID, TrumaINetBoxApp
 
@@ -28,12 +32,6 @@ TrumaClimate = truma_inetbox_ns.class_(
 CONF_SUPPORTED_TYPE = {
     "ROOM": truma_inetbox_ns.class_("TrumaRoomClimate", climate.Climate, cg.Component),
     "WATER": truma_inetbox_ns.class_("TrumaWaterClimate", climate.Climate, cg.Component),
-}
-
-CLIMATE_MODES = {
-    "OFF": CLIMATE_MODE_OFF,
-    "HEAT": CLIMATE_MODE_HEAT,
-    "AUTO": CLIMATE_MODE_AUTO,
 }
 
 
