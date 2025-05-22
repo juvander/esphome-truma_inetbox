@@ -85,6 +85,7 @@ CONFIG_SCHEMA = select.select_schema(
 
 FINAL_VALIDATE_SCHEMA = set_default_based_on_type()
 
+print("DEBUG - CONF_SUPPORTED_TYPE.keys():", list(CONF_SUPPORTED_TYPE.keys()))
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
