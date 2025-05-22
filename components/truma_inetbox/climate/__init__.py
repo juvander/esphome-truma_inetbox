@@ -6,7 +6,7 @@ from esphome.const import (
     CONF_TYPE,
     CONF_NAME,
 )
-from esphome.components.climate.const import (
+from esphome.components.climate.consts import (
     CLIMATE_MODE_OFF,
     CLIMATE_MODE_HEAT,
     CLIMATE_MODE_AUTO,
