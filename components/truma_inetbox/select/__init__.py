@@ -69,19 +69,21 @@ def set_default_based_on_type():
 
 
 
-CONFIG_SCHEMA = select.select_schema(
-    {
-        cv.GenerateID(): cv.declare_id(TrumaSelect),
-        cv.GenerateID(CONF_TRUMA_INETBOX_ID): cv.use_id(TrumaINetBoxApp),
-        cv.Required(CONF_TYPE): cv.one_of(*[k.upper() for k in CONF_SUPPORTED_TYPE.keys()]),
-        cv.Optional(CONF_ICON): cv.icon,
-        cv.Optional(CONF_OPTIONS): cv.All(
-            cv.ensure_list(cv.string_strict), cv.Length(min=1)
-        ),
-        cv.Optional(CONF_ENTITY_CATEGORY): cv.entity_category,
-        cv.Optional(CONF_DISABLED_BY_DEFAULT, default=False): cv.boolean,
-    }
-).extend(cv.COMPONENT_SCHEMA)
+SELECT_SCHEMA_BASE = select.select_schema({})
+
+CONFIG_SCHEMA = cv.Schema({
+    **SELECT_SCHEMA_BASE.schema,
+    cv.GenerateID(): cv.declare_id(TrumaSelect),
+    cv.GenerateID(CONF_TRUMA_INETBOX_ID): cv.use_id(TrumaINetBoxApp),
+    cv.Required(CONF_TYPE): cv.one_of(*CONF_SUPPORTED_TYPE.keys()),
+    cv.Optional(CONF_ICON): cv.icon,
+    cv.Optional(CONF_OPTIONS): cv.All(
+        cv.ensure_list(cv.string_strict), cv.Length(min=1)
+    ),
+    cv.Optional(CONF_ENTITY_CATEGORY): cv.entity_category,
+    cv.Optional(CONF_DISABLED_BY_DEFAULT, default=False): cv.boolean,
+}).extend(cv.COMPONENT_SCHEMA)
+
 
 FINAL_VALIDATE_SCHEMA = set_default_based_on_type()
 
