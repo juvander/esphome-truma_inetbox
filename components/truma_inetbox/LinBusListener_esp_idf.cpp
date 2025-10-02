@@ -21,7 +21,7 @@ void LinBusListener::setup_framework() {
   // uartSetFastReading
   auto uartComp = static_cast<ESPHOME_UART *>(this->parent_);
 
-  auto uart_num = uartComp->get_hw_serial_number();
+  uart_port_t uart_num = static_cast<uart_port_t>(uartComp->get_hw_serial_number());
 
   // Tweak the fifo settings so data is available as soon as the first byte is recieved.
   // If not it will wait either until fifo is filled or a certain time has passed.
