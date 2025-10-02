@@ -50,7 +50,10 @@ def set_default_based_on_type():
     return set_defaults_
 
 
-CONFIG_SCHEMA = cv.Schema({
+CONFIG_SCHEMA = cv.All(
+    climate.climate_schema(TrumaClimate)
+    .extend(
+        {
     cv.GenerateID(): cv.declare_id(TrumaClimate),
     cv.GenerateID(CONF_TRUMA_INETBOX_ID): cv.use_id(TrumaINetBoxApp),
     cv.Required(CONF_TYPE): cv.enum(CONF_SUPPORTED_TYPE, upper=True),
@@ -65,6 +68,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional("icon"): cv.icon,
     cv.Optional(CONF_VISUAL, default={}): CLIMATE_VISUAL_SCHEMA,
 })
+)
 
 FINAL_VALIDATE_SCHEMA = set_default_based_on_type()
 
