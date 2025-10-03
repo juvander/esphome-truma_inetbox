@@ -50,21 +50,21 @@ def set_default_based_on_type():
     return set_defaults_
 
 
-CONFIG_SCHEMA = cv.Schema({
-    cv.GenerateID(): cv.declare_id(TrumaClimate),
-    cv.GenerateID(CONF_TRUMA_INETBOX_ID): cv.use_id(TrumaINetBoxApp),
-    cv.Required(CONF_TYPE): cv.enum(CONF_SUPPORTED_TYPE, upper=True),
-
-    cv.Optional(CONF_NAME, default="Truma Climate"): cv.string,
-
-    cv.Optional("preset"): cv.All(cv.ensure_list(cv.string)),  # If you want presets
-    cv.Optional("supported_modes", default=["OFF", "HEAT"]): cv.ensure_list(cv.enum(CLIMATE_MODES, upper=True)),
-}).extend(cv.COMPONENT_SCHEMA).extend({
-    cv.Optional("disabled_by_default", default=False): cv.boolean,
-    cv.Optional("entity_category"): cv.entity_category,
-    cv.Optional("icon"): cv.icon,
-    cv.Optional(CONF_VISUAL, default={}): CLIMATE_VISUAL_SCHEMA,
-})
+CONFIG_SCHEMA = cv.Schema(
+    climate.climate_schema(TrumaClimate).extend({
+        cv.GenerateID(): cv.declare_id(TrumaClimate),
+        cv.GenerateID(CONF_TRUMA_INETBOX_ID): cv.use_id(TrumaINetBoxApp),
+        cv.Required(CONF_TYPE): cv.enum(CONF_SUPPORTED_TYPE, upper=True),
+        cv.Optional(CONF_NAME, default="Truma Climate"): cv.string,
+        cv.Optional("preset"): cv.All(cv.ensure_list(cv.string)),  # If you want presets
+        cv.Optional("supported_modes", default=["OFF", "HEAT"]): cv.ensure_list(cv.enum(CLIMATE_MODES, upper=True)),
+    }).extend(cv.COMPONENT_SCHEMA).extend({
+        cv.Optional("disabled_by_default", default=False): cv.boolean,
+        cv.Optional("entity_category"): cv.entity_category,
+        cv.Optional("icon"): cv.icon,
+        cv.Optional(CONF_VISUAL, default={}): CLIMATE_VISUAL_SCHEMA,
+    })
+)
 
 FINAL_VALIDATE_SCHEMA = set_default_based_on_type()
 
