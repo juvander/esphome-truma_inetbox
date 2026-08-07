@@ -142,7 +142,7 @@ def final_validate_device_schema(
 
     def validate_hardware_uart(opt, opt2=None, declaration_config=None):
         def validator(value):
-            if (CORE.is_rp2040):
+            if (CORE.is_rp2):
                 if value[CONF_INVERTED]:
                     raise cv.Invalid(
                         f"Component {name} required Hardware UART. Inverted is not supported by Hardware UART.")
