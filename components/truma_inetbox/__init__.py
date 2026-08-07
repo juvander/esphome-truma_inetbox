@@ -356,6 +356,7 @@ CONF_SUPPORTED_WATER_TEMPERATURE = {
             cv.Optional(CONF_HEATING_MODE, "OFF"): cv.templatable(cv.enum(CONF_SUPPORTED_HEATING_MODE, upper=True)),
         }
     ),
+    synchronous=False,
 )
 async def truma_inetbox_heater_set_target_room_temperature_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
