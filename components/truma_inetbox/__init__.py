@@ -1,4 +1,5 @@
 from typing import Optional
+from esphome.const import KEY_CORE, KEY_TARGET_FRAMEWORK
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
@@ -229,7 +230,7 @@ FINAL_VALIDATE_SCHEMA = cv.All(
 )
 
 async def to_code(config):
-    if CORE.using_esp_idf:
+    if CORE.data[KEY_CORE][KEY_TARGET_FRAMEWORK] == "esp-idf":
         # Run interrupt on core 0. ESP Home runs on core 1.
         cg.add_build_flag("-DARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE=0")
         # Default Stack Size is 2048. Not enough for my operation.
