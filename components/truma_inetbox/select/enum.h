@@ -30,7 +30,7 @@ enum class TRUMA_SELECT_TYPE_HEATER_ENERGY_MIX {
 };
 
 #ifdef ESPHOME_LOG_HAS_CONFIG
-static const char *enum_to_c_str(const TRUMA_SELECT_TYPE val) {
+inline const char *enum_to_c_str(const TRUMA_SELECT_TYPE val) {
   switch (val) {
     case TRUMA_SELECT_TYPE::HEATER_FAN_MODE:
       return "HEATER_FAN_MODE";
