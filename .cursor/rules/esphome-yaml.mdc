@@ -1,0 +1,71 @@
+---
+description: ESPHome YAML conventions for test configs, examples, and CI matrix
+globs: **/*.yaml
+alwaysApply: false
+---
+
+# ESPHome YAML Rules
+
+## UART is non-negotiable
+
+The LIN bus requires exactly these settings — validation is enforced at compile time by `FINAL_VALIDATE_SCHEMA`:
+
+```yaml
+uart:
+  - id: lin_uart_bus
+    baud_rate: 9600
+    data_bits: 8
+    parity: NONE
+    stop_bits: 2
+    tx_pin: <pin>
+    rx_pin: <pin>
+```
+
+On RP2040 both pins must be from a matching hardware UART pair (see `CONF_RP2040_HARDWARE_UART` in `__init__.py`).
+
+## Test configs (`tests/`)
+
+Tests reference the component locally:
+
+```yaml
+external_components:
+  - source:
+      type: local
+      path: ../components
+    components: ["truma_inetbox"]
+```
+
+Common fragments are `!include`d:
+
+```yaml
+uart: !include test.common.uart.yaml
+truma_inetbox: !include test.common.truma_inetbox.yaml
+binary_sensor: !include test.common.binary_sensor.yaml
+# … etc.
+```
+
+Adding a new test file means:
+1. Create `tests/test.<platform>.<variant>.yaml`.
+2. Add a matrix entry in `.github/workflows/main.yml` under `jobs.ci.strategy.matrix.include`.
+
+## Root / examples YAMLs
+
+Root-level `*.yaml` files (e.g. `truma-combi-6-d-e.yaml`, `truma.yaml`) and `examples/*.yaml` are user-facing reference configs. They reference the component locally:
+
+```yaml
+external_components:
+  - source:
+      type: local
+      path: components
+    components: ["truma_inetbox"]
+```
+
+Do not break these when changing the component API — update them in the same PR.
+
+## `secrets.yaml`
+
+Credentials are stored in `secrets.yaml` and referenced with `!secret`. Never hard-code Wi-Fi credentials or OTA passwords in config files (the AP fallback password in examples is intentionally public).
+
+## `debug: false` default
+
+The `truma_inetbox` block should have `debug: false` in production configs. Set `true` only for active debugging; it enables extra `ESP_LOGD` output in the LIN frame parser.

@@ -1,0 +1,62 @@
+---
+description: C++ conventions, ISR/threading rules, and naming standards for the truma_inetbox component
+globs: components/truma_inetbox/**/*.{h,cpp}
+alwaysApply: false
+---
+
+# C++ Component Rules
+
+## ISR / threading — most critical constraint
+
+`LinBusListener::onReceive_()` and `read_lin_frame_()` run in an interrupt or a dedicated FreeRTOS task (core 0). You **must not** call `ESP_LOG*` from that context; it is not ISR-safe.
+
+```cpp
+// ❌ BAD — direct ESP_LOG inside ISR or event-task
+ESP_LOGW(TAG, "CRC error");
+
+// ✅ GOOD — enqueue a typed log message, drain it on the main task
+QUEUE_LOG_MSG log_msg = QUEUE_LOG_MSG();
+log_msg.type = QUEUE_LOG_MSG_TYPE::WARN_READ_LIN_FRAME_LINv1_CRC;
+TRUMA_LOGW_ISR(log_msg);           // queue-based, ISR-safe
+// then in process_log_queue(): ESP_LOGW(TAG, …)
+```
+
+Macros: `TRUMA_LOGE_ISR`, `TRUMA_LOGW_ISR`, `TRUMA_LOGI_ISR`, `TRUMA_LOGV_ISR`, `TRUMA_LOGVV_ISR` (defined in `LinBusLog.h`). The non-`_ISR` variants (`TRUMA_LOGE`, etc.) are for main-task use only.
+
+## Naming — enforced by `.clang-tidy`
+
+| Symbol | Convention | Example |
+|---|---|---|
+| Class / Struct / Enum | `CamelCase` | `LinBusListener`, `QUEUE_LIN_MSG` |
+| Enum constants | `UPPER_CASE` | `HEATING_MODE_ECO` |
+| Public / protected member variables | `lower_case_` (trailing `_`) | `lin_checksum_` |
+| Private member variables | `lower_case_` (trailing `_`) | `fault_on_lin_bus_reported_` |
+| Methods (all visibility) | `lower_case` | `answer_lin_order_` |
+| Local variables / parameters | `lower_case` | `data_length` |
+| `static const char *const TAG` | `UPPER_CASE` variable name | `TAG` |
+
+## Platform `#ifdef` splits
+
+```cpp
+#ifdef USE_ESP32_FRAMEWORK_ARDUINO
+  // Arduino-specific setup (hw_serial->onReceive, xTaskCreatePinnedToCore)
+#endif
+#ifdef USE_ESP32_FRAMEWORK_ESP_IDF
+  // IDF-specific (uart_event_t queue)
+#endif
+#ifdef USE_RP2040
+  // RP2040 hardware UART + FreeRTOS
+#endif
+```
+
+Never mix platform logic in `LinBusListener.cpp`; it must stay in the platform-specific files.
+
+## Formatting
+
+- Column limit: **120** (`.clang-format`).
+- Indent: **2 spaces**, never tabs.
+- Run `clang-format` before committing.
+
+## FreeRTOS queues
+
+Queues (`lin_msg_queue_`, `log_queue_`) use **static storage** — do not replace with dynamic `xQueueCreate`. Queue lengths are controlled by `TRUMA_MSG_QUEUE_LENGTH` and `TRUMA_LOG_QUEUE_LENGTH` preprocessor defines.
