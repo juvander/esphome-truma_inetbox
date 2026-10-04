@@ -1,0 +1,83 @@
+---
+description: ESPHome Python codegen patterns for the truma_inetbox component
+globs: components/truma_inetbox/**/*.py
+alwaysApply: false
+---
+
+# ESPHome Codegen Rules
+
+## `CONF_SUPPORTED_TYPE` dict pattern
+
+Every entity platform exposes its supported types via a `CONF_SUPPORTED_TYPE` dict. Values are tuples of `(C++ class, C++ enum value)` for binary_sensor/select, or a plain dict of metadata for sensor.
+
+```python
+# ✅ Pattern used throughout this codebase
+CONF_SUPPORTED_TYPE = {
+    "HEATER_ROOM": (
+        truma_inetbox_ns.class_("TrumaHeaterBinarySensor", binary_sensor.BinarySensor, cg.Component),
+        TRUMA_BINARY_SENSOR_TYPE_dummy_ns.HEATER_ROOM,
+    ),
+}
+```
+
+The `FINAL_VALIDATE_SCHEMA` then applies type-driven defaults (e.g. `update_interval`, sensor units) without requiring the user to specify them.
+
+## Enum-as-namespace trick
+
+ESPHome codegen has no native enum support; use a dummy namespace to reference enum values:
+
+```python
+# `LIN_CHECKSUM` is a C++ enum class — wrap it as a namespace
+LIN_CHECKSUM_dummy_ns = truma_inetbox_ns.namespace("LIN_CHECKSUM")
+# Then reference: LIN_CHECKSUM_dummy_ns.LIN_CHECKSUM_VERSION_2
+```
+
+Add a comment `# '<EnumName>' is a enum class and not a namespace but it works.` above every such block.
+
+## `register_parented` is always required
+
+Every entity must be parented to `TrumaiNetBoxApp`:
+
+```python
+await cg.register_parented(var, config[CONF_TRUMA_INETBOX_ID])
+```
+
+`CONF_TRUMA_INETBOX_ID` is imported from `..` (`from .. import … CONF_TRUMA_INETBOX_ID, TrumaINetBoxApp`).
+
+## UART final validation — do not relax these
+
+The component requires exactly:
+
+```python
+final_validate_device_schema(
+    "truma_inetbox",
+    baud_rate=9600,
+    require_tx=True, require_rx=True,
+    stop_bits=2, data_bits=8, parity="NONE",
+    require_hardware_uart=True,   # RP2040: must be a hardware UART pin pair
+)
+```
+
+Hardware UART pin constraints for RP2040 are hard-coded in `CONF_RP2040_HARDWARE_UART` — update that dict if adding RP2040 pin support.
+
+## Automation / action registration
+
+```python
+@automation.register_action(
+    "truma_inetbox.<domain>.<verb>",
+    ActionClass,
+    schema,
+)
+async def …_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    template_ = await cg.templatable(config[CONF_FOO], args, cg.uint8)
+    cg.add(var.set_foo(template_))
+    return var
+```
+
+Action names follow the pattern `truma_inetbox.<domain>.<verb>` (e.g. `truma_inetbox.heater.set_target_room_temperature`).
+
+## Module-level constants
+
+`DEPENDENCIES`, `CODEOWNERS`, and the top-level namespace `truma_inetbox_ns = cg.esphome_ns.namespace("truma_inetbox")` are defined once in `__init__.py` and imported into sub-modules — never redeclare them.

@@ -70,6 +70,10 @@ void LinBusListener::setup() {
   }
 }
 
+void LinBusListener::loop() {
+  PollingComponent::loop();
+}
+
 void LinBusListener::update() { this->check_for_lin_fault_(); }
 
 void LinBusListener::write_lin_answer_(const uint8_t *data, uint8_t len) {
@@ -206,6 +210,9 @@ void LinBusListener::read_lin_frame_() {
     case READ_STATE_SYNC:
       // Second is Sync expected
       if (!this->read_byte(&buf) || buf != LIN_SYNC) {
+        if (this->debug_mode_) {
+          ESP_LOGD(TAG, "Invalid Sync Byte: %02X (Expected 0x55)", buf);
+        }
         log_msg.type = QUEUE_LOG_MSG_TYPE::VV_READ_LIN_FRAME_SYNC_EXPECTED;
         log_msg.current_PID = buf;
         TRUMA_LOGVV_ISR(log_msg);
@@ -242,6 +249,10 @@ void LinBusListener::read_lin_frame_() {
       auto current = micros();
       if (current > (this->last_data_recieved_ + this->time_per_first_byte_)) {
         // timeout occured.
+        if (this->debug_mode_) {
+          uint32_t delta = current - this->last_data_recieved_;
+          ESP_LOGD(TAG, "Frame Timeout! Resetting state. Delta: %lu us (threshold: %lu us)", delta, this->time_per_first_byte_);
+        }
         this->current_state_ = READ_STATE_BREAK;
         return;
       }
@@ -267,10 +278,59 @@ void LinBusListener::read_lin_frame_() {
 
     if (this->lin_checksum_ == LIN_CHECKSUM::LIN_CHECKSUM_VERSION_1 ||
         (this->current_PID_ == DIAGNOSTIC_FRAME_MASTER || this->current_PID_ == DIAGNOSTIC_FRAME_SLAVE)) {
-      if (data_CRC != data_checksum(this->current_data_, data_length, 0)) {
-        log_msg.type = QUEUE_LOG_MSG_TYPE::WARN_READ_LIN_FRAME_LINv1_CRC;
-        TRUMA_LOGW_ISR(log_msg);
-        this->current_data_valid = false;
+      uint8_t calculated_CRC = data_checksum(this->current_data_, data_length, 0);
+      if (data_CRC != calculated_CRC) {
+        bool recovered = false;
+        // Fallback: Check V2 checksum for diagnostic frames
+        if (this->current_PID_ == DIAGNOSTIC_FRAME_MASTER || this->current_PID_ == DIAGNOSTIC_FRAME_SLAVE) {
+             uint8_t calculated_CRC_V2 = data_checksum(this->current_data_, data_length, this->current_PID_with_parity_);
+             if (data_CRC == calculated_CRC_V2) {
+                  recovered = true;
+                  if (this->debug_mode_) {
+                     ESP_LOGD(TAG, "Accepted V2 checksum for diagnostic frame PID %02X", this->current_PID_);
+                  }
+             }
+        }
+
+        if (!recovered) {
+            // Check for frame collision: PID 0x3D with no response, next frame merged in
+            // Pattern: 00 55 [PID] [data...]
+            if (this->current_PID_ == DIAGNOSTIC_FRAME_SLAVE && 
+                this->current_data_count_ >= 3 && 
+                this->current_data_[0] == 0x00 && 
+                this->current_data_[1] == 0x55) {
+                
+                // Validate the suspected new PID (current_data_[2]) has correct parity
+                uint8_t suspected_pid_with_parity = this->current_data_[2];
+                uint8_t suspected_pid = suspected_pid_with_parity & 0x3F;
+                uint8_t expected_parity = addr_parity(suspected_pid);
+                
+                if (suspected_pid_with_parity == (suspected_pid | (expected_parity << 6))) {
+                    // Valid PID found - this is a merged frame. Log and ignore the 0x3D (it was empty)
+                    if (this->debug_mode_) {
+                        ESP_LOGD(TAG, "PID 0x3D empty response detected, next frame (PID 0x%02X) merged. Ignoring merged data.", suspected_pid);
+                    }
+                    // Mark as valid so we don't log CRC error - the 0x3D frame was legitimately empty
+                    this->current_data_valid = true;
+                    // Don't process this garbage data
+                    this->current_state_ = READ_STATE_BREAK;
+                    return;
+                }
+            }
+            
+            if (this->debug_mode_) {
+              ESP_LOGD(TAG, "LIN v1 Checksum Failure - PID: %02X, Received: %02X, Calculated: %02X", 
+                       this->current_PID_, data_CRC, calculated_CRC);
+            }
+            log_msg.type = QUEUE_LOG_MSG_TYPE::WARN_READ_LIN_FRAME_LINv1_CRC;
+            log_msg.current_PID = this->current_PID_;
+            for (uint8_t i = 0; i < this->current_data_count_; i++) {
+              log_msg.data[i] = this->current_data_[i];
+            }
+            log_msg.len = this->current_data_count_;
+            TRUMA_LOGW_ISR(log_msg);
+            this->current_data_valid = false;
+        }
       }
       if (this->current_PID_ == DIAGNOSTIC_FRAME_MASTER) {
         message_source_know = true;
@@ -283,7 +343,16 @@ void LinBusListener::read_lin_frame_() {
       uint8_t data_CRC_master = data_checksum(this->current_data_, data_length, this->current_PID_);
       uint8_t data_CRC_slave = data_checksum(this->current_data_, data_length, this->current_PID_with_parity_);
       if (data_CRC != data_CRC_master && data_CRC != data_CRC_slave) {
+        if (this->debug_mode_) {
+          ESP_LOGD(TAG, "LIN v2 Checksum Failure - PID: %02X, Received: %02X, Calculated Master: %02X, Calculated Slave: %02X", 
+                   this->current_PID_, data_CRC, data_CRC_master, data_CRC_slave);
+        }
         log_msg.type = QUEUE_LOG_MSG_TYPE::WARN_READ_LIN_FRAME_LINv2_CRC;
+        log_msg.current_PID = this->current_PID_;
+        for (uint8_t i = 0; i < this->current_data_count_; i++) {
+          log_msg.data[i] = this->current_data_[i];
+        }
+        log_msg.len = this->current_data_count_;
         TRUMA_LOGW_ISR(log_msg);
         this->current_data_valid = false;
       }
@@ -379,10 +448,10 @@ void LinBusListener::process_log_queue(TickType_t xTicksToWait) {
         ESP_LOGW(TAG, "0x%02X LIN CRC error on SID.", current_PID);
         break;
       case QUEUE_LOG_MSG_TYPE::WARN_READ_LIN_FRAME_LINv1_CRC:
-        ESP_LOGW(TAG, "LIN v1 CRC error");
+        ESP_LOGW(TAG, "LIN v1 CRC error. PID: %02X, Data: %s", current_PID, format_hex_pretty(log_msg.data, log_msg.len).c_str());
         break;
       case QUEUE_LOG_MSG_TYPE::WARN_READ_LIN_FRAME_LINv2_CRC:
-        ESP_LOGW(TAG, "LIN v2 CRC error");
+        ESP_LOGW(TAG, "LIN v2 CRC error. PID: %02X, Data: %s", current_PID, format_hex_pretty(log_msg.data, log_msg.len).c_str());
         break;
       case QUEUE_LOG_MSG_TYPE::VERBOSE_READ_LIN_FRAME_MSG:
         // Mark the PID of the TRUMA Combi heater as very verbose message.

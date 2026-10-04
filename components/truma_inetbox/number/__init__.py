@@ -18,7 +18,7 @@ from esphome.const import (
 )
 from .. import truma_inetbox_ns, CONF_TRUMA_INETBOX_ID, TrumaINetBoxApp
 
-DEPENDENCIES = ["truma_inetbox"]
+DEPENDENCIES = ["truma_inetbox", "number"]
 CODEOWNERS = ["@Fabian-Schmidt"]
 
 CONF_CLASS = "class"
@@ -103,9 +103,8 @@ def set_default_based_on_type():
     return set_defaults_
 
 
-CONFIG_SCHEMA = number.NUMBER_SCHEMA.extend(
+CONFIG_SCHEMA = number.number_schema(TrumaNumber).extend(
     {
-        cv.GenerateID(): cv.declare_id(TrumaNumber),
         cv.GenerateID(CONF_TRUMA_INETBOX_ID): cv.use_id(TrumaINetBoxApp),
         cv.Required(CONF_TYPE): cv.enum(CONF_SUPPORTED_TYPE, upper=True),
         cv.Optional(CONF_MAX_VALUE): cv.float_,
@@ -129,3 +128,4 @@ async def to_code(config):
     await cg.register_parented(var, config[CONF_TRUMA_INETBOX_ID])
 
     cg.add(var.set_type(CONF_SUPPORTED_TYPE[config[CONF_TYPE]][CONF_TYPE]))
+

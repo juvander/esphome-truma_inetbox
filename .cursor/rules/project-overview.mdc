@@ -1,0 +1,47 @@
+---
+description: Project architecture, directory layout, and platform constraints for esphome-truma_inetbox
+alwaysApply: true
+---
+
+# esphome-truma_inetbox — Project Overview
+
+ESPHome external component that emulates a Truma iNet box over a LIN bus to remotely control a CP Plus heater.
+
+## Repository layout
+
+```
+components/truma_inetbox/   ← the ESPHome component (C++ + Python codegen)
+  __init__.py               ← top-level component schema & automation registration
+  <platform>/__init__.py    ← per-entity schema (binary_sensor, climate, number, select, sensor, time)
+  LinBusListener.*          ← UART/ISR layer; one platform-specific .cpp per framework
+  LinBusProtocol.*          ← LIN diagnostic-frame state machine
+  TrumaiNetBoxApp.*         ← top-level app, owns sub-apps
+  TrumaiNetBoxApp{Heater,Timer,Clock,AirconAuto,AirconManual,Config}.*
+  TrumaStructs.h / TrumaEnums.h / helpers.*
+tests/                      ← ESPHome compile targets (one per platform×framework)
+examples/                   ← user-facing example YAMLs (not CI targets)
+*.yaml (root)               ← personal/integration example configs
+.github/workflows/main.yml  ← CI: `esphome compile` for every test/*.yaml
+.clang-format / .clang-tidy ← enforced C++ style
+```
+
+## Three-layer C++ architecture
+
+```
+UART ISR  →  LinBusListener  →  LinBusProtocol  →  TrumaiNetBoxApp
+                                                     └── sub-apps (Heater, Timer, …)
+```
+
+- **LinBusListener** owns UART setup, interrupt/event-task wiring, and raw LIN frame parsing into a FreeRTOS queue. Platform-specific setup lives in `LinBusListener_esp32_arduino.cpp`, `LinBusListener_esp_idf.cpp`, `LinBusListener_rp2040.cpp`.
+- **LinBusProtocol** handles LIN transport-layer framing (node address, multi-PDU reassembly, update queue).
+- **TrumaiNetBoxApp** implements the Truma application protocol and delegates to sub-apps.
+
+## Supported platforms
+
+| Platform | Framework | Guard macro |
+|---|---|---|
+| ESP32 | Arduino | `USE_ESP32_FRAMEWORK_ARDUINO` |
+| ESP32 | ESP-IDF | `USE_ESP32_FRAMEWORK_ESP_IDF` |
+| RP2040 | Arduino | `USE_RP2040` |
+
+Any new platform-diverging code must go into the appropriate `LinBusListener_<platform>.cpp` behind the correct `#ifdef`.
